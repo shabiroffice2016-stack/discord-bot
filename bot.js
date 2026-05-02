@@ -10,30 +10,28 @@ const client = new Client({
 });
 
 client.on('ready', () => {
-  console.log(`Logged in as ${client.user.tag}`);
+  console.log(`✅ Bot ready: ${client.user.tag}`);
 });
 
 client.on('messageCreate', async (message) => {
-  // Ignore bot messages
   if (message.author.bot) return;
-
-  // Optional: only respond to commands
   if (!message.content.startsWith("!")) return;
 
   try {
-    // Send message to n8n
-    await axios.post(process.env.N8N_WEBHOOK, {
+    // Send to n8n
+    const response = await axios.post(process.env.N8N_WEBHOOK, {
       user: message.author.username,
       message: message.content,
-      channel: message.channel.id
+      channelId: message.channel.id
     });
 
-    // Reply in Discord
-    await message.reply("Received ✅ Processing...");
-    
+    // Reply with n8n response
+    const reply = response.data?.reply || "Done ✅";
+    await message.reply(reply);
+
   } catch (err) {
     console.error(err);
-    await message.reply("Error sending to server ❌");
+    await message.reply("❌ Error processing request");
   }
 });
 

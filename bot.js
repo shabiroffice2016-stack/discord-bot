@@ -9,16 +9,31 @@ const client = new Client({
   ],
 });
 
+client.on('ready', () => {
+  console.log(`Logged in as ${client.user.tag}`);
+});
+
 client.on('messageCreate', async (message) => {
+  // Ignore bot messages
   if (message.author.bot) return;
 
-  if (message.content.startsWith("!task")) {
+  // Optional: only respond to commands
+  if (!message.content.startsWith("!")) return;
+
+  try {
+    // Send message to n8n
     await axios.post(process.env.N8N_WEBHOOK, {
       user: message.author.username,
-      message: message.content
+      message: message.content,
+      channel: message.channel.id
     });
 
-    message.reply("Task received ✅");
+    // Reply in Discord
+    await message.reply("Received ✅ Processing...");
+    
+  } catch (err) {
+    console.error(err);
+    await message.reply("Error sending to server ❌");
   }
 });
 
